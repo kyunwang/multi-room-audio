@@ -1,0 +1,3 @@
+Mopidy-Iris==3.58.0
+Mopidy-YouTube==3.3
+Mopidy-YTMusic==0.3.0
