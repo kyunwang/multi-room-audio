@@ -1,20 +1,78 @@
 version: "3.9"
+
+volumes:
+  # A volume to store mopify data in a persitent way.
+
+  mopidy_data:
+  sharesound:
+  snapserver_share:
+    
+  # - ./mopidy_data:/data:rw
+  # - ./tmp/sharesound:/tmp/sharesound:rw
+  # - ./snapserver-share:/etc/snapserver-share/
+
+
+
 services:
   mopidy:
     build:
-      context: ./mopidy
-      dockerfile: Dockerfile
-    image: "test/mopidy"
-    # command: tail -f /dev/null
-    # tty: true
+        context: ./mopidy
+        dockerfile: Dockerfile
+    container_name: mopidy
+    image: "test/mopidy:v0.0"
     ports:
-      - "6600:6600"
-      - "6680:6680"
+    - "6600:6600"
+    - "6680:6680"
     devices:
-      - "/dev/snd:/dev/snd"
+    - "/dev/snd:/dev/snd"
     volumes:
-      - ./fifo:/tmp/snapcast/
-      - ./music:/media/music
-      - ./mopidydata:/mopidy
-#   redis:
-#     image: "redis:alpine"
+      # The volume with the sharesound fifo for snapcast to work
+      - "sharesound:/tmp/sharesound:rw"
+      # Makes mopidy data persistent
+      - "mopidy_data:/data"
+      # - type: bind
+      #   source: mopidy_data
+      #   target: /data
+      # Add local music folder
+      # local_music_folder:/music:ro
+    restart: unless-stopped
+
+  snapserver:
+    build:
+      context: ./snapserver
+      dockerfile: Dockerfile
+      args:
+        SNAPCAST_VERSION: 0.25.0
+    container_name: snapserver
+    image: test/snapserver:v0.0
+    volumes:
+      - "sharesound:/tmp/sharesound:ro"
+      - "snapserver_share:/tmp/snapserver_share"
+    # command: "snapserver -s pipe:///tmp/sharesound/snapfifo?name=Radio"
+    # command: "snapserver --daemon 0"
+    # command: "snapserver -c=/etc/snapserver-share/snapserver.conf"
+    command: "snapserver"
+    ports:
+    - "1704:1704"
+    - "1705:1705"
+    - "1780:1780"
+    - "5000:5000"
+    # network_mode: "host"
+    depends_on:
+      - mopidy
+    # volumes:
+    restart: unless-stopped
+
+    # depends_on:
+    #   - snapserver
+
+  # snapclient:
+  #   container_name: snapclient
+  # #  links:
+  # #   - snapserver:snapserverhost
+  #   image: test/snapcast:v0.0
+  #   # Must put name of snapserver here
+  #   # because avahi doesnt work
+  #   command: "snapclient --host 192.168.3.3 --user snapclient:audio"
+  #   devices:
+  #     - "/dev/snd/:/dev/snd/"
