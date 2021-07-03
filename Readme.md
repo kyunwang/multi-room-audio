@@ -13,4 +13,11 @@ TODO:
 - [] Airplay in own docker container?
 - [] Make mopidy config editable without rebuilding
 - [] Make snapserver config editable without rebuilding
+- [] Publish on docker hub
+ 
+
+# Optional docker compose services (profiles)
+https://stackoverflow.com/a/66902046
+
+docker-compose --profile snapserver up -d
  -->

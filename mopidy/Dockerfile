@@ -1,8 +1,11 @@
-FROM debian:buster-slim
+# FROM debian:buster-slim
+FROM balenalib/raspberry-pi-debian:latest
+
+ENV TZ=Europe/Amsterdam
 
 # Set non interactive during build
 ARG DEBIAN_FRONTEND=noninteractive
-ENV TZ=Europe/Amsterdam
+ARG CONFIG_TARGET=client
 
 RUN apt-get update && apt-get full-upgrade
 
@@ -42,10 +45,12 @@ RUN python3 -m pip install Mopidy-Youtube
 RUN python3 -m pip install Mopidy-YTMusic
 
 ##  Copy fallback configuration.
-COPY mopidy.conf /etc/default/mopidy.conf
+COPY mopidy.${CONFIG_TARGET}.conf /etc/default/mopidy.conf
+RUN chmod a+x /etc/default/mopidy.conf
 
 #  Copy default configuration.
-COPY mopidy.conf /etc/mopidy/mopidy.conf
+COPY mopidy.${CONFIG_TARGET}.conf /etc/mopidy/mopidy.conf
+RUN chmod a+x /etc/mopidy/mopidy.conf
 
 # Copy helper script.
 COPY entrypoint.sh /entrypoint.sh
